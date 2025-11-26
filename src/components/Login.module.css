@@ -1,0 +1,255 @@
+/* Login Container - Terminal Style */
+.loginContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Lock Icon */
+.lockIcon {
+  margin-bottom: 3rem;
+  transition: all 0.7s ease;
+  color: #3f3f46; /* zinc-700 */
+}
+
+.lockIconFocused {
+  color: #e4e4e7; /* zinc-100 */
+  transform: scale(1.1);
+}
+
+/* Form Container */
+.formContainer {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  padding: 0 1.5rem;
+  transition: opacity 0.5s ease;
+}
+
+.formContainerLoading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.formShake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Password Input */
+.passwordInput {
+  width: 100%;
+  background: transparent;
+  text-align: center;
+  font-size: 2.25rem;
+  font-weight: 300;
+  letter-spacing: 0.5em;
+  color: white;
+  border: none;
+  outline: none;
+  caret-color: transparent;
+  padding-right: 2.5rem;
+}
+
+.passwordInput::placeholder {
+  color: #27272a; /* zinc-800 */
+}
+
+.passwordInput:focus {
+  outline: none;
+}
+
+/* Password Toggle Button */
+.toggleButton {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #3f3f46; /* zinc-700 */
+  transition: color 0.3s ease;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.toggleButton:hover {
+  color: #e4e4e7; /* zinc-100 */
+}
+
+.toggleButton:focus {
+  outline: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Animated Underline */
+.underlineContainer {
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: #27272a; /* zinc-800 */
+}
+
+.underline {
+  height: 100%;
+  background-color: white;
+  transition: all 0.5s ease-out;
+  margin: 0 auto;
+}
+
+.underlineActive {
+  width: 100%;
+  opacity: 1;
+}
+
+.underlineInactive {
+  width: 0;
+  opacity: 0;
+}
+
+/* Action Container */
+.actionContainer {
+  height: 4rem;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading Dots */
+.loadingDots {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #71717a; /* zinc-500 */
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  background-color: #71717a; /* zinc-500 */
+  border-radius: 9999px;
+  animation: bounce 1s infinite;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.5rem);
+  }
+}
+
+/* Submit Button */
+.submitButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #71717a; /* zinc-500 */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  padding: 0;
+  font-family: inherit;
+}
+
+.submitButton:hover {
+  color: white;
+}
+
+.submitButton:disabled {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  pointer-events: none;
+}
+
+.submitButton:not(:disabled) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arrowIcon {
+  transition: transform 0.3s ease;
+}
+
+.submitButton:hover .arrowIcon {
+  transform: translateX(0.25rem);
+}
+
+/* Footer Branding */
+.footer {
+  position: absolute;
+  bottom: 2rem;
+  text-align: center;
+  width: 100%;
+  color: #27272a; /* zinc-800 */
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Error Message (Hidden visually but shake animation shows error) */
+.errorMessage {
+  position: absolute;
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ef4444;
+  font-size: 0.875rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.errorMessageVisible {
+  opacity: 1;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}

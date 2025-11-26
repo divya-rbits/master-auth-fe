@@ -6,3 +6,4 @@
 6. Make every task and code change you do as simple as possible. We want to avoid making any massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
 7. Finally, add a review section to the [todo.md](todo.md) file with a summary of the changes you made and any other relevant information inside the tasks folder.
 8. Always create a new todo.md for a new task with the name of the task accomplished in the name like todo_<name_of_task>.md
+9. Whenever creating new UI please make sure to follow the theme that the previous UI has.

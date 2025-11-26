@@ -1,10 +1,10 @@
 import './App.css'
+import Login from './components/Login'
 
 function App() {
   return (
     <div className="app">
-      <h1>Master Password Authentication</h1>
-      <p>Frontend application for master password authentication system</p>
+      <Login />
     </div>
   )
 }
