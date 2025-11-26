@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Lock, Eye, EyeOff } from 'lucide-react'
 import styles from './Login.module.css'
 import ErrorMessage from './ErrorMessage'
+import { login } from '../services/api'
+import { saveToken } from '../services/storage'
 
 function Login() {
+  const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
@@ -19,7 +23,7 @@ function Login() {
     }
   }, [])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault()
 
     if (!password || loading) return
@@ -28,23 +32,32 @@ function Login() {
     setErrorMessage('')
     setLoading(true)
 
-    // Simulate authentication delay
-    setTimeout(() => {
-      if (!password.trim()) {
-        setLoading(false)
-        setError(true)
-        setErrorMessage('Invalid password')
-        // Reset error state after animation plays
-        setTimeout(() => {
-          setError(false)
-          setErrorMessage('')
-        }, 3000)
-      } else {
-        // TODO: Call API service to login
-        console.log('Login submitted with password')
-        setLoading(false)
-      }
-    }, 800)
+    try {
+      // Call API to login
+      const response = await login(password)
+
+      // Save token to localStorage
+      saveToken(response.token, response.expires_in)
+
+      console.log('Login successful')
+
+      // Clear password field
+      setPassword('')
+      setLoading(false)
+
+      // Redirect to dashboard
+      navigate('/dashboard')
+    } catch (error) {
+      setLoading(false)
+      setError(true)
+      setErrorMessage(error.message || 'Login failed')
+
+      // Reset error state after animation plays
+      setTimeout(() => {
+        setError(false)
+        setErrorMessage('')
+      }, 3000)
+    }
   }
 
   const formClasses = [
