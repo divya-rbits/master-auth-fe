@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ArrowRight, Lock, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react'
 import styles from './Login.module.css'
 import ErrorMessage from './ErrorMessage'
 import { useAuth } from '../context/AuthContext'
+import { getStoragePreference, saveStoragePreference } from '../services/storage'
 
 function Login() {
   const navigate = useNavigate()
@@ -16,6 +17,8 @@ function Login() {
   const [successMessage, setSuccessMessage] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isNetworkError, setIsNetworkError] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -23,6 +26,10 @@ function Login() {
     if (inputRef.current) {
       inputRef.current.focus()
     }
+
+    // Load saved storage preference
+    const savedPreference = getStoragePreference()
+    setRememberMe(savedPreference)
 
     // Check for logout success message from navigation state
     if (location.state?.loggedOut) {
@@ -45,11 +52,15 @@ function Login() {
 
     setError(false)
     setErrorMessage('')
+    setIsNetworkError(false)
     setLoading(true)
 
     try {
+      // Save storage preference for next time
+      saveStoragePreference(rememberMe)
+
       // Call auth context login (which handles API call and token storage)
-      await login(password)
+      await login(password, rememberMe)
 
       console.log('Login successful')
 
@@ -67,13 +78,23 @@ function Login() {
       setLoading(false)
       setError(true)
       setErrorMessage(error.message || 'Login failed')
+      setIsNetworkError(error.isNetworkError || false)
 
-      // Reset error state after animation plays
-      setTimeout(() => {
-        setError(false)
-        setErrorMessage('')
-      }, 3000)
+      // Don't auto-clear error if it's a network error (user needs to retry)
+      if (!error.isNetworkError) {
+        setTimeout(() => {
+          setError(false)
+          setErrorMessage('')
+        }, 3000)
+      }
     }
+  }
+
+  const handleRetry = () => {
+    setError(false)
+    setErrorMessage('')
+    setIsNetworkError(false)
+    handleSubmit()
   }
 
   const formClasses = [
@@ -113,6 +134,14 @@ function Login() {
         show={!!errorMessage}
       />
 
+      {/* Retry Button for Network Errors */}
+      {isNetworkError && errorMessage && (
+        <button onClick={handleRetry} className={styles.retryButton}>
+          <RefreshCw size={14} />
+          <span>Retry</span>
+        </button>
+      )}
+
       {/* Input Form */}
       <form onSubmit={handleSubmit} className={formClasses}>
         <input
@@ -144,6 +173,22 @@ function Login() {
           <div className={underlineClasses} />
         </div>
       </form>
+
+      {/* Remember Me Checkbox */}
+      <div className={styles.rememberMeContainer}>
+        <label className={styles.rememberMeLabel}>
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className={styles.rememberMeCheckbox}
+          />
+          <span className={styles.checkboxText}>Remember me on this device</span>
+        </label>
+        <span className={styles.checkboxHint}>
+          {rememberMe ? '(Persists after browser close)' : '(Session only - clears on close)'}
+        </span>
+      </div>
 
       {/* Action Container */}
       <div className={styles.actionContainer}>

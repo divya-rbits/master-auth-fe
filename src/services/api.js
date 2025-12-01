@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from '../config/constants.js';
+import { isNetworkError, getNetworkErrorMessage } from '../utils/network.js';
 
 // Create axios instance with default configuration
 const api = axios.create({
@@ -51,6 +52,31 @@ api.interceptors.response.use(
   }
 );
 
+// Retry configuration
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
+/**
+ * Retry an async function with exponential backoff
+ * @param {Function} fn - The async function to retry
+ * @param {number} retries - Number of retries remaining
+ * @returns {Promise} The result of the function
+ */
+async function retryWithBackoff(fn, retries = MAX_RETRIES) {
+  try {
+    return await fn();
+  } catch (error) {
+    // Only retry network errors, not auth errors
+    if (retries > 0 && error.isNetworkError) {
+      const delay = RETRY_DELAY * (MAX_RETRIES - retries + 1);
+      console.log(`Retrying in ${delay}ms... (${retries} attempts remaining)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries - 1);
+    }
+    throw error;
+  }
+}
+
 // API Functions
 
 /**
@@ -79,8 +105,10 @@ export async function login(password) {
         default:
           throw new Error(errorMessage || 'Login failed');
       }
-    } else if (error.request) {
-      throw new Error('Connection failed, please try again');
+    } else if (isNetworkError(error)) {
+      const networkError = new Error(getNetworkErrorMessage(error));
+      networkError.isNetworkError = true;
+      throw networkError;
     } else {
       throw new Error('An unexpected error occurred');
     }
@@ -103,8 +131,10 @@ export async function validateToken(token) {
     if (error.response) {
       const errorMessage = error.response.data?.message;
       throw new Error(errorMessage || 'Token validation failed');
-    } else if (error.request) {
-      throw new Error('Connection failed, please try again');
+    } else if (isNetworkError(error)) {
+      const networkError = new Error(getNetworkErrorMessage(error));
+      networkError.isNetworkError = true;
+      throw networkError;
     } else {
       throw new Error('An unexpected error occurred');
     }
@@ -132,8 +162,10 @@ export async function logout(token) {
     if (error.response) {
       const errorMessage = error.response.data?.message;
       throw new Error(errorMessage || 'Logout failed');
-    } else if (error.request) {
-      throw new Error('Connection failed, please try again');
+    } else if (isNetworkError(error)) {
+      const networkError = new Error(getNetworkErrorMessage(error));
+      networkError.isNetworkError = true;
+      throw networkError;
     } else {
       throw new Error('An unexpected error occurred');
     }

@@ -8,6 +8,7 @@ export const config = {
   // Storage Keys
   TOKEN_KEY: 'auth_token',
   EXPIRY_KEY: 'token_expires_at',
+  STORAGE_PREFERENCE_KEY: 'storage_preference',
 
   // Timeouts (in milliseconds)
   API_TIMEOUT: 10000, // 10 seconds

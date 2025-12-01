@@ -54,7 +54,12 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error('Token validation failed:', error)
-        clearToken()
+
+        // Only clear token if it's not a network error
+        // If network error, keep token and user can retry later
+        if (!error.isNetworkError) {
+          clearToken()
+        }
         setIsAuthenticated(false)
       } finally {
         setLoading(false)
@@ -64,9 +69,17 @@ export function AuthProvider({ children }) {
     checkAuth()
   }, [])
 
-  const login = async (password) => {
+  const login = async (password, rememberMe = false) => {
     const response = await apiLogin(password)
-    saveToken(response.token, response.expires_in)
+
+    try {
+      saveToken(response.token, response.expires_in, rememberMe)
+    } catch (storageError) {
+      // If storage fails, throw a user-friendly error
+      // The error message from saveToken is already user-friendly
+      throw storageError
+    }
+
     setIsAuthenticated(true)
     setUser(response.user || null)
     return response
