@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowRight, Lock, Eye, EyeOff } from 'lucide-react'
 import styles from './Login.module.css'
 import ErrorMessage from './ErrorMessage'
-import { login } from '../services/api'
-import { saveToken } from '../services/storage'
+import { useAuth } from '../context/AuthContext'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login } = useAuth()
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const inputRef = useRef(null)
@@ -20,6 +22,19 @@ function Login() {
     // Auto-focus on mount
     if (inputRef.current) {
       inputRef.current.focus()
+    }
+
+    // Check for logout success message from navigation state
+    if (location.state?.loggedOut) {
+      setSuccessMessage('Logged out successfully')
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('')
+      }, 3000)
+
+      // Clear the navigation state
+      navigate(location.pathname, { replace: true, state: {} })
     }
   }, [])
 
@@ -33,11 +48,8 @@ function Login() {
     setLoading(true)
 
     try {
-      // Call API to login
-      const response = await login(password)
-
-      // Save token to localStorage
-      saveToken(response.token, response.expires_in)
+      // Call auth context login (which handles API call and token storage)
+      await login(password)
 
       console.log('Login successful')
 
@@ -82,6 +94,13 @@ function Login() {
       <div className={lockClasses}>
         <Lock size={32} strokeWidth={1.5} />
       </div>
+
+      {/* Success Message */}
+      <ErrorMessage
+        message={successMessage}
+        type="success"
+        show={!!successMessage}
+      />
 
       {/* Error Message */}
       <ErrorMessage

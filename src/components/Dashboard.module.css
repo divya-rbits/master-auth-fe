@@ -60,6 +60,34 @@
   }
 }
 
+/* Logout Button */
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid #3f3f46; /* zinc-700 */
+  color: #a1a1aa; /* zinc-400 */
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.7s ease 0.6s both;
+}
+
+.logoutButton:hover {
+  border-color: #71717a; /* zinc-500 */
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logoutButton:active {
+  transform: scale(0.98);
+}
+
 /* Footer Branding */
 .footer {
   position: absolute;
