@@ -297,40 +297,61 @@ Build a simple, secure master password entry page that integrates with the authe
 
 ## Phase 5: Integration & Routing
 
-### Task 5.1: Create Main Application Placeholder
-- [ ] Create `src/pages/Dashboard.jsx` component
-- [ ] Add simple content: "You are authenticated!"
-- [ ] Include logout button using AuthContext
-- [ ] Display token expiration time (optional)
-- [ ] This will be replaced with actual app later
+### Task 5.1: Create Success Page for Cross-Subdomain Redirect
 
-**Completion Criteria**: Protected page exists for successful login
+**NOTE**: For cross-subdomain architecture, we need a success page instead of a traditional dashboard.
+
+- [x] ✅ Create `src/pages/AuthSuccess.jsx` component
+- [x] ✅ Show "Authentication successful, redirecting..." message
+- [x] ✅ Display 2-second countdown timer with animation
+- [x] ✅ Extract `returnUrl` from query parameters
+- [x] ✅ Show destination hostname for transparency
+- [x] ✅ Auto-redirect to returnUrl after countdown
+- [x] ✅ Style to match terminal theme
+- [ ] Keep `src/components/Dashboard.jsx` for testing only (optional)
+
+**Completion Criteria**: Success page exists and redirects users back to their app ✅
 
 ---
 
 ### Task 5.2: Implement Client-Side Routing
-- [ ] Install react-router-dom: `npm install react-router-dom`
-- [ ] Set up BrowserRouter in `src/main.jsx` or `src/App.jsx`
-- [ ] Create routes for:
-  - `/login` → Login component
-  - `/dashboard` → Dashboard component (protected)
-  - `/` → Redirect to dashboard or login based on auth
-- [ ] Wrap app with AuthProvider (AuthContext)
-- [ ] Ensure routes have access to auth context
 
-**Completion Criteria**: App can navigate between login and protected pages
+**NOTE**: Routes updated for cross-subdomain authentication flow.
+
+- [x] ✅ Install react-router-dom: `npm install react-router-dom`
+- [x] ✅ Set up BrowserRouter in `src/App.jsx`
+- [x] ✅ Create routes for:
+  - `/` → Login component (or redirect to dashboard if authenticated)
+  - `/success` → AuthSuccess component (protected, shows countdown and redirects)
+  - `/dashboard` → Dashboard component (protected, for testing only)
+- [x] ✅ Wrap app with AuthProvider (AuthContext)
+- [x] ✅ Ensure routes have access to auth context
+- [x] ✅ Extract and forward `returnUrl` query parameter through the flow
+
+**Completion Criteria**: App can navigate between login, success page, and dashboard ✅
 
 ---
 
 ### Task 5.3: Create Authentication Guard
-- [ ] Create `src/components/PrivateRoute.jsx` component
-- [ ] Use AuthContext to check if user is authenticated
-- [ ] If authenticated: render children/Outlet
-- [ ] If not authenticated: Navigate to /login
-- [ ] Show loading state while checking authentication
-- [ ] Apply to all protected routes using Route wrapper
 
-**Completion Criteria**: Unauthenticated users redirected to login
+**NOTE**: For the cross-subdomain architecture, authentication guards work differently:
+
+**For Master Password App (`masterpass.reversebits.com`):**
+- [x] ✅ Authentication guard is handled by route-level checks in App.jsx
+- [x] ✅ `/success` route requires authentication (already protected)
+- [x] ✅ `/dashboard` route requires authentication (for testing only)
+- [x] ✅ Unauthenticated users see login page at `/`
+- [x] ✅ No need for PrivateRoute component in master password app
+
+**For Other Apps (`td.reversebits.com`, etc.):**
+- [ ] Create AuthContext that redirects to master password page if no token
+- [ ] Validate token with backend API on app load
+- [ ] If invalid/expired, redirect to `masterpass.reversebits.com?returnUrl=...`
+- [ ] See "Integration with Other Apps" section below for full implementation
+
+**Completion Criteria**:
+- Master password app: Routes properly protected with inline checks ✅ **COMPLETED**
+- Other apps: Use redirect-based authentication flow (see Integration Guide)
 
 ---
 
@@ -470,16 +491,27 @@ Build a simple, secure master password entry page that integrates with the authe
 ## Phase 9: Testing
 
 ### Task 9.1: Manual Testing Checklist
+
+**Updated for cross-subdomain architecture:**
+
 - [ ] Test successful login with correct password
 - [ ] Test failed login with wrong password
+- [ ] Test success page appears with countdown after login
+- [ ] Test returnUrl extraction from query parameters
+- [ ] Test redirect to returnUrl after countdown
+- [ ] Test redirect with no returnUrl (uses default)
 - [ ] Test token validation on page reload
 - [ ] Test logout functionality
 - [ ] Test with no network connection
 - [ ] Test with expired token
 - [ ] Test rate limiting (5+ failed attempts)
 - [ ] Test on different browsers (Chrome, Firefox, Safari)
+- [ ] Test full cross-subdomain flow:
+  - Visit `masterpass.reversebits.com?returnUrl=https://td.reversebits.com`
+  - Login successfully
+  - Verify redirect back to td.reversebits.com
 
-**Completion Criteria**: All manual tests pass
+**Completion Criteria**: All manual tests pass including cross-subdomain flow
 
 ---
 
@@ -557,13 +589,22 @@ Build a simple, secure master password entry page that integrates with the authe
 ---
 
 ### Task 10.5: Test End-to-End Integration
-- [ ] Test complete flow: login → validate → protected page
+
+**Updated for cross-subdomain architecture:**
+
+- [ ] Test complete flow: login → success page → redirect to other app
+- [ ] Test integration with actual app (e.g., Transcript Detective):
+  - App detects no token → redirects to masterpass.reversebits.com
+  - User logs in → sees success page
+  - Auto-redirect back to app → app validates token
+  - App grants access
 - [ ] Test from different devices
 - [ ] Test with production backend
-- [ ] Verify all features working
+- [ ] Verify all features working across subdomains
+- [ ] Test token sharing via localStorage (same domain)
 - [ ] Fix any issues found
 
-**Completion Criteria**: Complete system working end-to-end
+**Completion Criteria**: Complete cross-subdomain authentication working end-to-end
 
 ---
 
@@ -590,12 +631,15 @@ Build a simple, secure master password entry page that integrates with the authe
 ---
 
 ### Task 11.3: Add Multi-Tab Synchronization
-- [ ] Use localStorage events to sync across tabs
-- [ ] If user logs out in one tab, logout all tabs
-- [ ] If user logs in, update all tabs
-- [ ] Prevent conflicts between tabs
 
-**Completion Criteria**: Authentication state synced across tabs
+**NOTE**: For cross-subdomain architecture, multi-tab sync is less critical since users typically redirect away from master password app after authentication.
+
+- [ ] Use localStorage events to sync across tabs (optional)
+- [ ] If user logs out in one tab, logout all tabs
+- [ ] For other apps: each app independently validates token on load
+- [ ] Cross-subdomain sync happens naturally via backend token validation
+
+**Completion Criteria**: Authentication state synced within master password app tabs (optional feature)
 
 ---
 
@@ -617,102 +661,250 @@ The frontend will be considered complete when:
 - ✅ Users can login with correct password
 - ✅ Invalid passwords show error messages
 - ✅ Tokens are stored and validated on page load
+- ✅ Success page shows countdown and redirects to returnUrl
+- ✅ returnUrl parameter is properly extracted and forwarded
+- ✅ Cross-subdomain redirect flow works correctly
 - ✅ Users can logout (if feature exists)
 - ✅ Works on desktop and mobile browsers
 - ✅ All manual tests pass
 - ✅ Deployed and accessible via HTTPS
 - ✅ Ready for integration with actual applications
-- ✅ Documentation complete
+- ✅ Documentation complete with cross-subdomain integration guide
 
 ---
 
 ## Integration with Other Apps
 
-### Future Integration Guide
+### Cross-Subdomain Authentication Architecture
 
-When integrating this authentication with other apps (e.g., Transcript Detective):
+This master password application is designed to work as a **centralized authentication service** across multiple subdomains on the same server.
 
-1. **Share Auth Context**: Import and use the same AuthProvider across apps
-2. **Token Storage**: Apps share token via localStorage using the same key
-3. **API Calls**: Use axios interceptors to include token in all requests
-4. **Protected Routes**: Use PrivateRoute component for protected pages
-5. **Shared Domain**: Host both apps on same domain for shared localStorage
+#### Architecture Overview:
+- **Master Password Auth**: Hosted at `masterpass.reversebits.com`
+- **Other Apps**: Hosted at subdomains like `td.reversebits.com` (Transcript Detective)
+- **Backend Server**: Single server running 24/7 serving all apps
 
-**Example Integration Code**:
+#### Authentication Flow:
+
+```
+1. User visits: td.reversebits.com
+2. App checks for token in localStorage
+3. If no token or invalid:
+   → Redirect to masterpass.reversebits.com?returnUrl=https://td.reversebits.com
+4. User authenticates at master password page
+5. Success page shows "Authentication successful, redirecting..." (2 seconds)
+6. Auto-redirect back to td.reversebits.com
+7. App validates token via backend API
+8. If valid → Grant access
+```
+
+#### Why This Approach?
+
+**Cross-Subdomain Challenges:**
+- localStorage is **not shared** between different subdomains (different origins)
+- Each subdomain has isolated storage (td.reversebits.com ≠ masterpass.reversebits.com)
+- Shared AuthContext only works within a single application, not across subdomains
+
+**Benefits of Centralized Auth Service:**
+1. **Clean Separation**: Master password is a dedicated authentication service
+2. **Single Source of Truth**: Token validation happens via backend API
+3. **Works Across Subdomains**: Each app redirects to central auth and gets redirected back
+4. **Simpler to Maintain**: Each app is independent but uses same auth backend
+5. **Better Security**: Centralized authentication with proper redirects
+6. **Scalable**: Easy to add more apps using the same auth service
+
+---
+
+### Integration Guide for Other Apps
+
+When integrating other apps (e.g., Transcript Detective) with this authentication system:
+
+#### Step 1: Create Auth Check in Your App
+
 ```javascript
-// In your main app (e.g., Transcript Detective)
-// src/main.jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import App from './App';
+// In your app (e.g., td.reversebits.com)
+// src/context/AuthContext.jsx
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+import { createContext, useContext, useState, useEffect } from 'react'
+import { getToken, saveToken, clearToken } from '../services/storage'
+import { validateToken } from '../services/api'
 
-// src/App.jsx
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import Login from './components/Login';
-import Dashboard from './pages/Dashboard';
-import PrivateRoute from './components/PrivateRoute';
+const AuthContext = createContext(null)
 
-function App() {
-  const { isAuthenticated, loading } = useAuth();
+export function AuthProvider({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
 
-  if (loading) {
-    return <div>Loading...</div>;
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = getToken()
+
+      if (!token) {
+        // No token, redirect to master password page
+        const currentUrl = window.location.href
+        window.location.href = `https://masterpass.reversebits.com?returnUrl=${encodeURIComponent(currentUrl)}`
+        return
+      }
+
+      // Token exists, validate it with backend
+      try {
+        const response = await validateToken(token)
+
+        if (response.valid) {
+          setIsAuthenticated(true)
+          setUser(response.user || null)
+        } else {
+          // Invalid token, redirect to master password
+          clearToken()
+          const currentUrl = window.location.href
+          window.location.href = `https://masterpass.reversebits.com?returnUrl=${encodeURIComponent(currentUrl)}`
+        }
+      } catch (error) {
+        console.error('Token validation failed:', error)
+        clearToken()
+        // Redirect to master password on error
+        window.location.href = 'https://masterpass.reversebits.com'
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  const logout = async () => {
+    clearToken()
+    setIsAuthenticated(false)
+    setUser(null)
+    // Redirect to master password page
+    window.location.href = 'https://masterpass.reversebits.com'
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/"
-        element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
-      />
-    </Routes>
-  );
+    <AuthContext.Provider value={{ isAuthenticated, loading, user, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export default App;
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+```
 
-// src/services/api.js - Axios interceptor for auth token
-import axios from 'axios';
-import { getToken } from './storage';
+#### Step 2: Handle Return from Master Password
+
+```javascript
+// In your app's main component or a dedicated callback handler
+// This runs when user returns from masterpass.reversebits.com
+
+useEffect(() => {
+  // Check if we're returning from master password auth
+  const params = new URLSearchParams(window.location.search)
+  const fromAuth = params.get('fromAuth')
+
+  if (fromAuth) {
+    // Clean up URL
+    window.history.replaceState({}, '', window.location.pathname)
+
+    // Token should now be in localStorage (set by master password app)
+    // AuthContext will validate it
+  }
+}, [])
+```
+
+#### Step 3: Create API Service with Token
+
+```javascript
+// src/services/api.js
+import axios from 'axios'
+import { getToken } from './storage'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   timeout: 10000,
-});
+})
 
 // Add token to all requests
 api.interceptors.request.use((config) => {
-  const token = getToken();
+  const token = getToken()
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})
 
-export default api;
+// Handle 401 responses (invalid/expired token)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token invalid, redirect to master password
+      clearToken()
+      window.location.href = 'https://masterpass.reversebits.com?returnUrl=' +
+        encodeURIComponent(window.location.href)
+    }
+    return Promise.reject(error)
+  }
+)
+
+export const validateToken = async (token) => {
+  const response = await api.post('/api/auth/validate', {
+    token,
+    application_id: 'transcript-detective' // Your app ID
+  })
+  return response.data
+}
+
+export default api
 ```
+
+#### Step 4: Storage Service (Same across all apps)
+
+```javascript
+// src/services/storage.js
+export const TOKEN_KEY = 'auth_token'
+export const EXPIRY_KEY = 'token_expires_at'
+
+export function saveToken(token, expiresIn) {
+  localStorage.setItem(TOKEN_KEY, token)
+  const expirationTime = Date.now() + (expiresIn * 1000)
+  localStorage.setItem(EXPIRY_KEY, expirationTime.toString())
+}
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(EXPIRY_KEY)
+}
+```
+
+---
+
+### Key Points:
+
+1. **Each app is independent** - No shared AuthContext, each has its own
+2. **Token validation via API** - Always validate with backend, never trust localStorage alone
+3. **Redirect-based flow** - Apps redirect to master password, then back
+4. **returnUrl parameter** - Critical for knowing where to redirect after auth
+5. **Backend is single source of truth** - All apps validate against same backend API
+
+### Testing Your Integration:
+
+1. Visit your app: `http://td.reversebits.com`
+2. App detects no token → Redirects to `http://masterpass.reversebits.com?returnUrl=http://td.reversebits.com`
+3. Enter master password
+4. See success page with countdown
+5. Auto-redirect back to `http://td.reversebits.com`
+6. App validates token and grants access
 
 ---
 

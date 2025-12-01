@@ -57,8 +57,12 @@ function Login() {
       setPassword('')
       setLoading(false)
 
-      // Redirect to dashboard
-      navigate('/dashboard')
+      // Get returnUrl from query params or use default
+      const params = new URLSearchParams(location.search)
+      const returnUrl = params.get('returnUrl') || ''
+
+      // Redirect to success page with returnUrl
+      navigate(`/success${returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ''}`)
     } catch (error) {
       setLoading(false)
       setError(true)

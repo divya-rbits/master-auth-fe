@@ -1,0 +1,135 @@
+/* Success Container - Terminal Style */
+.successContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Success Icon */
+.successIcon {
+  margin-bottom: 2rem;
+  color: #22c55e; /* green-500 */
+  animation: fadeInScale 0.5s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Title */
+.title {
+  font-size: 2rem;
+  font-weight: 300;
+  color: white;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+  animation: fadeIn 0.7s ease 0.2s both;
+}
+
+/* Subtitle */
+.subtitle {
+  color: #71717a; /* zinc-500 */
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+  animation: fadeIn 0.7s ease 0.4s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Countdown Container */
+.countdownContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+  animation: fadeIn 0.7s ease 0.6s both;
+}
+
+/* Countdown Number */
+.countdown {
+  font-size: 4rem;
+  font-weight: 200;
+  color: #22c55e; /* green-500 */
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* Countdown Text */
+.countdownText {
+  margin-top: 0.5rem;
+  color: #52525b; /* zinc-600 */
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* URL Info */
+.urlInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #3f3f46; /* zinc-700 */
+  border-radius: 4px;
+  color: #a1a1aa; /* zinc-400 */
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  animation: fadeIn 0.7s ease 0.8s both;
+}
+
+.urlText {
+  font-family: 'Courier New', monospace;
+}
+
+/* Footer Branding */
+.footer {
+  position: absolute;
+  bottom: 2rem;
+  text-align: center;
+  width: 100%;
+  color: #27272a; /* zinc-800 */
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  user-select: none;
+  pointer-events: none;
+}
