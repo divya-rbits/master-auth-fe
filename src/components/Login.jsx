@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ArrowRight, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react'
+import { ArrowRight, Lock, Eye, EyeOff, RefreshCw, Clock } from 'lucide-react'
 import styles from './Login.module.css'
 import ErrorMessage from './ErrorMessage'
 import { useAuth } from '../context/AuthContext'
-import { getStoragePreference, saveStoragePreference } from '../services/storage'
+import { getStoragePreference, saveStoragePreference, getRateLimitExpiry, clearRateLimitExpiry } from '../services/storage'
+import { validateReturnUrl } from '../utils/urlValidator'
+import { parseAuthParams, storeAuthParams } from '../utils/urlParams'
 
 function Login() {
   const navigate = useNavigate()
@@ -19,9 +21,18 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isNetworkError, setIsNetworkError] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [isRateLimited, setIsRateLimited] = useState(false)
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0)
   const inputRef = useRef(null)
 
   useEffect(() => {
+    // Parse and store URL parameters (application_id and redirect_uri)
+    const authParams = parseAuthParams(location.search)
+    if (authParams.applicationId || authParams.redirectUri) {
+      storeAuthParams(authParams)
+      console.log('Auth params from URL:', authParams)
+    }
+
     // Auto-focus on mount
     if (inputRef.current) {
       inputRef.current.focus()
@@ -30,6 +41,14 @@ function Login() {
     // Load saved storage preference
     const savedPreference = getStoragePreference()
     setRememberMe(savedPreference)
+
+    // Check for rate limit on mount
+    const rateLimitExpiry = getRateLimitExpiry('login')
+    if (rateLimitExpiry && Date.now() < rateLimitExpiry) {
+      setIsRateLimited(true)
+      const secondsRemaining = Math.ceil((rateLimitExpiry - Date.now()) / 1000)
+      setRateLimitCountdown(secondsRemaining)
+    }
 
     // Check for logout success message from navigation state
     if (location.state?.loggedOut) {
@@ -45,10 +64,37 @@ function Login() {
     }
   }, [])
 
+  // Rate limit countdown effect
+  useEffect(() => {
+    if (!isRateLimited || rateLimitCountdown <= 0) {
+      return
+    }
+
+    const interval = setInterval(() => {
+      const rateLimitExpiry = getRateLimitExpiry('login')
+
+      if (!rateLimitExpiry || Date.now() >= rateLimitExpiry) {
+        // Rate limit expired
+        setIsRateLimited(false)
+        setRateLimitCountdown(0)
+        clearRateLimitExpiry('login')
+        setError(false)
+        setErrorMessage('')
+        clearInterval(interval)
+      } else {
+        // Update countdown
+        const secondsRemaining = Math.ceil((rateLimitExpiry - Date.now()) / 1000)
+        setRateLimitCountdown(secondsRemaining)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isRateLimited, rateLimitCountdown])
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault()
 
-    if (!password || loading) return
+    if (!password || loading || isRateLimited) return
 
     setError(false)
     setErrorMessage('')
@@ -68,20 +114,39 @@ function Login() {
       setPassword('')
       setLoading(false)
 
-      // Get returnUrl from query params or use default
-      const params = new URLSearchParams(location.search)
-      const returnUrl = params.get('returnUrl') || ''
+      // Get redirect_uri from stored params (set from URL on mount)
+      const storedRedirectUri = sessionStorage.getItem('auth_redirect_uri')
 
-      // Redirect to success page with returnUrl
-      navigate(`/success${returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ''}`)
+      // Also check for legacy returnUrl query param for backwards compatibility
+      const params = new URLSearchParams(location.search)
+      const rawReturnUrl = params.get('returnUrl')
+
+      // Use redirect_uri if available, otherwise fall back to returnUrl
+      const redirectTarget = storedRedirectUri || rawReturnUrl
+
+      // Validate redirect URL to prevent open redirect vulnerability
+      const validatedUrl = redirectTarget ? validateReturnUrl(redirectTarget, null) : null
+
+      // Clear rate limit on successful login
+      clearRateLimitExpiry('login')
+
+      // Redirect to success page with validated URL
+      navigate(`/success${validatedUrl ? `?returnUrl=${encodeURIComponent(validatedUrl)}` : ''}`)
     } catch (error) {
       setLoading(false)
       setError(true)
       setErrorMessage(error.message || 'Login failed')
       setIsNetworkError(error.isNetworkError || false)
 
-      // Don't auto-clear error if it's a network error (user needs to retry)
-      if (!error.isNetworkError) {
+      // Handle rate limit errors
+      if (error.isRateLimitError) {
+        setIsRateLimited(true)
+        const secondsRemaining = Math.ceil((error.expiryTimestamp - Date.now()) / 1000)
+        setRateLimitCountdown(secondsRemaining)
+      }
+
+      // Don't auto-clear error if it's a network error or rate limit error
+      if (!error.isNetworkError && !error.isRateLimitError) {
         setTimeout(() => {
           setError(false)
           setErrorMessage('')
@@ -142,6 +207,16 @@ function Login() {
         </button>
       )}
 
+      {/* Rate Limit Message */}
+      {isRateLimited && (
+        <div className={styles.rateLimitMessage}>
+          <Clock size={16} className={styles.rateLimitIcon} />
+          <span className={styles.rateLimitText}>
+            Too many attempts. Try again in <span className={styles.rateLimitCountdown}>{rateLimitCountdown}</span>s
+          </span>
+        </div>
+      )}
+
       {/* Input Form */}
       <form onSubmit={handleSubmit} className={formClasses}>
         <input
@@ -153,7 +228,7 @@ function Login() {
           onBlur={() => setIsFocused(false)}
           className={styles.passwordInput}
           placeholder="••••••"
-          autoComplete="off"
+          autoComplete="current-password"
         />
 
         {/* Password Toggle Button */}
@@ -201,8 +276,9 @@ function Login() {
         ) : (
           <button
             onClick={() => handleSubmit()}
-            disabled={!password}
+            disabled={!password || isRateLimited}
             className={styles.submitButton}
+            title={isRateLimited ? `Rate limited. Wait ${rateLimitCountdown}s` : ''}
           >
             <span>Enter System</span>
             <ArrowRight size={14} className={styles.arrowIcon} />

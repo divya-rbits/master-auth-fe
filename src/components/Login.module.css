@@ -269,9 +269,10 @@
 }
 
 .submitButton:disabled {
-  opacity: 0;
+  opacity: 0.3;
   transform: translateY(0.5rem);
   pointer-events: none;
+  cursor: not-allowed;
 }
 
 .submitButton:not(:disabled) {
@@ -285,6 +286,42 @@
 
 .submitButton:hover .arrowIcon {
   transform: translateX(0.25rem);
+}
+
+/* Rate Limit Message */
+.rateLimitMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.1); /* red-500 with opacity */
+  border: 1px solid #3f3f46; /* zinc-700 */
+  border-radius: 0.25rem;
+  animation: fadeIn 0.3s ease forwards, pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.rateLimitIcon {
+  color: #ef4444; /* red-500 */
+  flex-shrink: 0;
+}
+
+.rateLimitText {
+  color: #71717a; /* zinc-500 */
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.rateLimitCountdown {
+  color: #ef4444; /* red-500 */
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  display: inline-block;
+  min-width: 2ch;
+  text-align: center;
 }
 
 /* Retry Button */
